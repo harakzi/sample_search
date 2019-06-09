@@ -18,26 +18,33 @@ from rest_framework.decorators import action
 logger = logging.getLogger('development')
 
 
+# このビュークラスに飛んできたリクエストは、LoginRequiredMixinによって一度ユーザ認証画面に遷移される？
 class IndexView(LoginRequiredMixin, generic.ListView):
 
+    # デフォルト変数のオーバーライド→ページングする際の１ページあたりの最大件数
     paginate_by = 5
+    # デフォルト変数のオーバーライド→利用するテンプレートを上書き
     template_name = 'search/index.html'
+    # こちらもオーバーライド→取り扱うモデルクラスを上書き
     model = Post
 
+    # セッションに検索フォームの値を渡す
     def post(self, request, *args, **kwargs):
 
+        # 検索フォームに何も入力されずにボタンが押下されたときの挙動を記述
         form_value = [
             self.request.POST.get('title', None),
             self.request.POST.get('text', None),
         ]
         request.session['form_value'] = form_value
 
-        # 検索時にページネーションに関連したエラーを防ぐ
+        # 検索時にページネーションに関連したエラーを防ぐ??
         self.request.GET = self.request.GET.copy()
         self.request.GET.clear()
 
         return self.get(request, *args, **kwargs)
 
+    # セッションから検索フォームの値を取得して、検索フォームの初期値としてセットする
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
 
@@ -46,9 +53,11 @@ class IndexView(LoginRequiredMixin, generic.ListView):
         text = ''
         if 'form_value' in self.request.session:
             form_value = self.request.session['form_value']
+            # ユーザによって入力された値をセットする
             title = form_value[0]
             text = form_value[1]
 
+        # ディクショナリ
         default_data = {'title': title,  # タイトル
                         'text': text,  # 内容
                         }
@@ -58,6 +67,7 @@ class IndexView(LoginRequiredMixin, generic.ListView):
 
         return context
 
+    # セッションから取得した検索フォームの値に応じてクエリを発行する。
     def get_queryset(self):
 
         # sessionに値がある場合、その値でクエリ発行する。
@@ -66,7 +76,7 @@ class IndexView(LoginRequiredMixin, generic.ListView):
             title = form_value[0]
             text = form_value[1]
 
-            # 検索条件
+            # 検索条件（★）⇒Q()メソッドの役割調査
             condition_title = Q()
             condition_text = Q()
 

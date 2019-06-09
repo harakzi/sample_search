@@ -52,8 +52,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+# URLディスパッチャ参照先
 ROOT_URLCONF = 'list.urls'
 
+# テンプレートファイル参照先
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
